@@ -7,3 +7,6 @@ __pycache__/
 # Ignore helper scripts
 repair.bat
 push_update.bat
+
+# Ignore directory opener
+open_dir.bat
