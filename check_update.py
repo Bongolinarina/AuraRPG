@@ -3,11 +3,13 @@ import sys
 import requests
 import base64
 import importlib
+import subprocess
 
 # ---------------- Config ----------------
 from data import config
 importlib.reload(config)  # Reload config to get the latest version
-current_version = config.version
+
+CURRENT_VERSION = config.version
 GITHUB_TOKEN = config.GITHUB_TOKEN
 
 OWNER = "Bongolinarina"
@@ -20,7 +22,7 @@ FILES_TO_UPDATE = [
     "data/config.py",
     "game/__init__.py",
     "game/commands.py",
-    # Add more files as needed
+    # Add more files here as needed
 ]
 
 # ---------------- Download ----------------
@@ -48,25 +50,40 @@ def download_file(filepath):
     print(f"Updated {filepath}")
     return True
 
+# ---------------- Restart Game ----------------
+def restart_game():
+    """Restart the game in a new window and exit the current process."""
+    print("Restarting game to apply updates...")
+
+    python_exe = sys.executable
+    script_path = os.path.abspath(sys.argv[0])
+
+    if os.name == "nt":  # Windows
+        subprocess.Popen(f'start "" "{python_exe}" "{script_path}"', shell=True)
+    else:
+        subprocess.Popen([python_exe, script_path])
+
+    sys.exit()  # Exit current process
+
 # ---------------- Update ----------------
 def update_game():
     """Download all tracked files from GitHub and restart the game."""
     print("Updating game files from GitHub...")
     success = True
+
     for file in FILES_TO_UPDATE:
         if not download_file(file):
             success = False
 
     if success:
         print("All files updated successfully!")
-        print("Restarting game to apply updates...")
-        python = sys.executable
-        os.execv(python, [python] + sys.argv)
+        restart_game()
     else:
         print("Some files failed to update. Check your token/repo permissions.")
 
 # ---------------- Check for Update ----------------
 def get_latest_version():
+    """Return the latest tag from GitHub repo."""
     url = f"https://api.github.com/repos/{OWNER}/{REPO}/tags"
     try:
         response = requests.get(url, headers=HEADERS, timeout=5)
@@ -80,15 +97,16 @@ def get_latest_version():
         return None
 
 def check_for_update():
+    """Check GitHub for a newer version and optionally update."""
     latest = get_latest_version()
     if latest is None:
         print("No tags found on GitHub.")
         return
 
     print(f"Latest GitHub version: {latest}")
-    print(f"Your current version: {current_version}")
+    print(f"Your current version: {CURRENT_VERSION}")
 
-    if latest != current_version:
+    if latest != CURRENT_VERSION:
         choice = input(f"A new version is available ({latest}). Update? [y/N]: ").lower()
         if choice == "y":
             update_game()
