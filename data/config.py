@@ -1,5 +1,5 @@
 # config.py
-version = "BETA"
+version = "BETA-test"
 NAME = ""
 HP = 100
 MAXHP = 100
