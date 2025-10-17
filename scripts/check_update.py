@@ -5,6 +5,7 @@ import requests
 import zipfile
 import io
 import shutil
+import subprocess
 
 # ---------------- Config ----------------
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -38,14 +39,23 @@ def download_latest_zip():
         print(f"Download failed: {e}")
         return None
 
+
 def restart_game():
-    """Restart the game in a new CMD window (Windows only)."""
+    """Restart the game in a new CMD window after update."""
     print("Restarting game to apply updates...")
-    python_exe = sys.executable
-    script_path = os.path.abspath(sys.argv[0])
-    if os.name == "nt":
-        os.system(f'start cmd /k "{python_exe}" "{script_path}"')
-    sys.exit()  # Stop current process
+
+    # Path to run_game.bat (absolute)
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    bat_path = os.path.join(project_root, "run_game.bat")
+
+    if os.path.exists(bat_path):
+        print(f"[DEBUG] Launching: {bat_path}")
+        # Use 'start' in cmd, /wait ensures the update has finished
+        subprocess.Popen(f'start "" "{bat_path}"', shell=True)
+    else:
+        print(f"[ERROR] run_game.bat not found at {bat_path}")
+
+    sys.exit()  # Exit the current Python process
 
 # ---------------- Update ----------------
 def update_game():
