@@ -41,7 +41,7 @@ def download_latest_zip():
 
 
 def restart_game():
-    """Restart the game in a new CMD window and close the current one."""
+    """Restart the game in a new CMD window and close this Python process."""
     print("Restarting game to apply updates...")
 
     # Absolute path to run_game.bat
@@ -51,13 +51,15 @@ def restart_game():
     if os.path.exists(bat_path):
         print(f"[DEBUG] Launching: {bat_path}")
 
-        # Launch the batch in a new CMD window and close the current one
-        # /C runs the command then closes this window automatically
+        # Launch run_game.bat in a new CMD window and **immediately close current process**
+        # /C closes the new CMD automatically after it finishes
         subprocess.Popen(f'start "" cmd /C "{bat_path}"', shell=True)
+
     else:
         print(f"[ERROR] run_game.bat not found at {bat_path}")
 
-    sys.exit()  # Exit the current Python process
+    # Exit immediately so the current prompt window closes
+    sys.exit()
 
 # ---------------- Update ----------------
 def update_game():
