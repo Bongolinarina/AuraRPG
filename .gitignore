@@ -15,4 +15,4 @@ open_dir.bat
 new_version.bat
 
 # Ignore the update plans
-plans
+plans.txt
