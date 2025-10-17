@@ -1,4 +1,3 @@
-# check_update.py
 import os
 import sys
 import requests
@@ -6,68 +5,46 @@ import zipfile
 import io
 import shutil
 import subprocess
+import time
 
 # ---------------- Config ----------------
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from data import config
+import importlib
+importlib.reload(config)
 
 CURRENT_VERSION = config.version
 
-# ---------------- GitHub Repo ----------------
 OWNER = "Bongolinarina"
 REPO = "AuraRPG"
 
-# ---------------- Files to update ----------------
+# Files to update (relative paths in repo)
 FILES_TO_UPDATE = [
-    "main.py",
+    "scripts/main.py",
     "data/config.py",
     "game/__init__.py",
     "game/commands.py",
-    # Add more files here as needed
+    # Add more files if needed
 ]
 
-# ---------------- Helper Functions ----------------
+# ---------------- Download ----------------
 def download_latest_zip():
-    """Download latest main branch as zip from GitHub."""
     url = f"https://github.com/{OWNER}/{REPO}/archive/refs/heads/main.zip"
     try:
-        print("Downloading latest version from GitHub...")
+        print("[DEBUG] Downloading latest version...")
         r = requests.get(url, stream=True)
         r.raise_for_status()
         return zipfile.ZipFile(io.BytesIO(r.content))
     except Exception as e:
-        print(f"Download failed: {e}")
+        print(f"[ERROR] Download failed: {e}")
         return None
 
-
-def restart_game():
-    """Restart main.py in the same CMD window after update."""
-    print("Restarting game to apply updates...")
-
-    # Absolute path to main.py
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    main_path = os.path.join(project_root, "scripts", "main.py")
-
-    if os.path.exists(main_path):
-        print(f"[DEBUG] Relaunching main.py: {main_path}")
-        # Launch a new Python process for main.py
-        subprocess.Popen([sys.executable, main_path])
-        # Exit current process after a small delay
-        import time
-        time.sleep(1)  # give the new process time to start
-        sys.exit()
-    else:
-        print("[ERROR] main.py not found!")
-        sys.exit()
-# ---------------- Update ----------------
-def update_game():
-    """Download all files from GitHub and apply updates."""
+def apply_update():
     z = download_latest_zip()
     if not z:
-        return
+        return False
 
-    print("Extracting files...")
-    temp_dir = "temp_update"
+    temp_dir = os.path.join(os.path.dirname(__file__), "temp_update")
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
     os.makedirs(temp_dir, exist_ok=True)
@@ -76,35 +53,51 @@ def update_game():
     extracted_folder = os.path.join(temp_dir, os.listdir(temp_dir)[0])
 
     # Backup player data
-    player_data = "data/player_data.txt"
+    player_file = os.path.join(os.path.dirname(__file__), "..", "data", "player_data.txt")
     backup_data = None
-    if os.path.exists(player_data):
-        with open(player_data, "r") as f:
+    if os.path.exists(player_file):
+        with open(player_file, "r") as f:
             backup_data = f.read()
 
-    # Copy files over
+    # Copy files
     for root, dirs, files in os.walk(extracted_folder):
         rel_path = os.path.relpath(root, extracted_folder)
-        target_dir = os.path.join(".", rel_path)
+        target_dir = os.path.join(os.path.dirname(__file__), "..", rel_path)
         os.makedirs(target_dir, exist_ok=True)
         for file in files:
-            dst_file = os.path.join(target_dir, file)
             src_file = os.path.join(root, file)
-            if dst_file != player_data:
+            dst_file = os.path.join(target_dir, file)
+            if dst_file != player_file:  # do not overwrite player data
                 shutil.copy2(src_file, dst_file)
 
     # Restore player data
     if backup_data:
-        with open(player_data, "w") as f:
+        with open(player_file, "w") as f:
             f.write(backup_data)
 
     shutil.rmtree(temp_dir)
-    print("Update complete!")
-    restart_game()
+    print("[DEBUG] Update applied successfully!")
+    return True
 
-# ---------------- Check for updates ----------------
+# ---------------- Restart Game ----------------
+def restart_game_in_new_window():
+    """Launch main.py in a new CMD window and exit this one."""
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    main_path = os.path.join(project_root, "scripts", "main.py")
+
+    if not os.path.exists(main_path):
+        print("[ERROR] main.py not found!")
+        sys.exit()
+
+    main_path_quoted = f'"{main_path}"'
+    print("[DEBUG] Launching updated game in a new CMD window...")
+    subprocess.Popen(f'start "" python {main_path_quoted}', shell=True)
+    time.sleep(0.5)
+    print("[DEBUG] Closing this window...")
+    sys.exit()
+
+# ---------------- Check for Update ----------------
 def get_latest_version():
-    """Get latest tag from GitHub."""
     url = f"https://api.github.com/repos/{OWNER}/{REPO}/tags"
     try:
         r = requests.get(url, timeout=5)
@@ -118,24 +111,27 @@ def get_latest_version():
         return None
 
 def check_for_update():
-    """Check if a new version is available and prompt user."""
     latest = get_latest_version()
-    if latest is None:
-        print("No tags found on GitHub.")
+    if not latest:
+        print("[DEBUG] No tags found on GitHub.")
         return
 
-    print(f"Latest GitHub version: {latest}")
-    print(f"Your current version: {CURRENT_VERSION}")
+    print(f"[DEBUG] Latest GitHub version: {latest}")
+    print(f"[DEBUG] Your current version: {CURRENT_VERSION}")
 
     if latest != CURRENT_VERSION:
         choice = input(f"A new version is available ({latest}). Update? [y/N]: ").lower()
         if choice == "y":
-            update_game()
+            success = apply_update()
+            if success:
+                restart_game_in_new_window()
+            else:
+                print("[ERROR] Update failed. Continuing with current version.")
         else:
             print("Skipping update.")
     else:
         print("You are running the latest version.")
 
-# ---------------- Main ----------------
+# ---------------- Run if called directly ----------------
 if __name__ == "__main__":
     check_for_update()
