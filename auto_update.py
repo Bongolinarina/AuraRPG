@@ -1,8 +1,10 @@
-import requests, zipfile, io, os, shutil
+import requests, zipfile, io, os, shutil, sys
 from data.config import version as current_version
 
 GITHUB_USER = "Bongolinarina"
 GITHUB_REPO = "AuraRPG"
+PLAYER_DATA_FILE = "data/player_data.txt"
+RUN_BAT = "run_game.bat"  # Path to your batch launcher
 
 def download_latest_version():
     url = f"https://github.com/{GITHUB_USER}/{GITHUB_REPO}/archive/refs/heads/main.zip"
@@ -29,17 +31,16 @@ def update_game():
 
     z.extractall(temp_dir)
 
-    # The zip usually extracts into a folder named like AuraRPG-main
+    # The zip usually extracts into a folder like AuraRPG-main
     extracted_folder = os.path.join(temp_dir, os.listdir(temp_dir)[0])
 
     # Backup player data
-    player_data = "data/player_data.txt"
     backup_data = None
-    if os.path.exists(player_data):
-        with open(player_data, "r") as f:
+    if os.path.exists(PLAYER_DATA_FILE):
+        with open(PLAYER_DATA_FILE, "r") as f:
             backup_data = f.read()
 
-    # Copy all files to the game folder
+    # Copy all files to the project folder
     for root, dirs, files in os.walk(extracted_folder):
         rel_path = os.path.relpath(root, extracted_folder)
         target_dir = os.path.join(".", rel_path)
@@ -47,16 +48,27 @@ def update_game():
         for file in files:
             src_file = os.path.join(root, file)
             dst_file = os.path.join(target_dir, file)
-            if dst_file != player_data:  # don't overwrite player data
+            if dst_file != PLAYER_DATA_FILE:  # Don't overwrite player data
                 shutil.copy2(src_file, dst_file)
 
     # Restore player data
     if backup_data:
-        with open(player_data, "w") as f:
+        with open(PLAYER_DATA_FILE, "w") as f:
             f.write(backup_data)
 
     shutil.rmtree(temp_dir)
-    print("Update complete! Please restart the game.")
+    print("Update complete!")
+
+    # Launch game via run_game.bat in a new CMD window
+    bat_path = os.path.abspath(RUN_BAT)
+    if os.path.exists(bat_path):
+        print("Restarting game in a new CMD window...")
+        os.system(f'start "" "{bat_path}"')
+    else:
+        print(f"Batch launcher {RUN_BAT} not found. Please run main.py manually.")
+
+    # Exit current Python process
+    sys.exit()
 
 # Run if script called directly
 if __name__ == "__main__":

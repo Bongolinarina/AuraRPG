@@ -3,13 +3,22 @@ import os
 import sys
 
 # ----------------- Ensure CMD -----------------
+
+import os
+import sys
+
 def ensure_cmd():
-    # If not running in a real terminal (like VS Code)
-    if not sys.stdin.isatty():
+    shell = os.environ.get("COMSPEC", "")
+    # Detect if we're not running in classic CMD
+    if "cmd.exe" not in shell.lower():
         bat_path = os.path.abspath("run_game.bat")
-        print("Launching game in a real CMD window...")
-        os.system(f'start "" "{bat_path}"')
-        sys.exit()  # Stop the current Python instance
+        print("[DEBUG] Launching game in a real CMD window...")
+        if os.path.exists(bat_path):
+            os.system(f'start cmd /k "{bat_path}"')
+        else:
+            print(f"[DEBUG] ERROR: run_game.bat not found at {bat_path}")
+        sys.exit()
+
 
 ensure_cmd()  # Call this first
 
