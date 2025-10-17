@@ -14,12 +14,12 @@ if not exist "%MAIN_PY%" (
 )
 
 :: Wait 1 second to ensure updates have finished
+echo [DEBUG] Waiting 1 second before launching main.py...
 timeout /t 1 /nobreak >nul
 
 echo [DEBUG] Launching CMD to run Python script...
-
-:: Use start with /D to set working directory and /K to keep window open
-start "" cmd /D /K "cd /d "%~dp0" && python "%MAIN_PY%" && if %errorlevel% neq 0 echo [ERROR] Python exited with code %errorlevel% && pause"
+:: Launch in a new CMD window
+start "" cmd /K "python "%MAIN_PY%""
 
 echo [DEBUG] Launcher exiting...
 exit
