@@ -1,4 +1,5 @@
-version = "BETA"
+version = "BETA-test"
+GITHUB_TOKEN = "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"
 NAME = ""
 HP = 100
 MAXHP = 100
