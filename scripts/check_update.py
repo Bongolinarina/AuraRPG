@@ -41,7 +41,7 @@ def download_latest_zip():
 
 
 def restart_game():
-    """Restart the game in the same CMD window after update."""
+    """Restart main.py in the same CMD window after update."""
     print("Restarting game to apply updates...")
 
     # Absolute path to main.py
@@ -50,7 +50,12 @@ def restart_game():
 
     if os.path.exists(main_path):
         print(f"[DEBUG] Relaunching main.py: {main_path}")
-        os.execv(sys.executable, [sys.executable, main_path])
+        # Launch a new Python process for main.py
+        subprocess.Popen([sys.executable, main_path])
+        # Exit current process after a small delay
+        import time
+        time.sleep(1)  # give the new process time to start
+        sys.exit()
     else:
         print("[ERROR] main.py not found!")
         sys.exit()
