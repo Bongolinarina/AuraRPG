@@ -1,3 +1,4 @@
+# scripts/check_update.py
 import os
 import sys
 import requests
@@ -5,24 +6,29 @@ import base64
 import importlib
 import subprocess
 
+# ---------------- Project Root ----------------
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 # ---------------- Config ----------------
 from data import config
-importlib.reload(config)  # Reload config to get the latest version
-
+importlib.reload(config)  # reload to get latest version
 CURRENT_VERSION = config.version
-GITHUB_TOKEN = config.GITHUB_TOKEN
+GITHUB_TOKEN = getattr(config, "GITHUB_TOKEN", "")
 
 OWNER = "Bongolinarina"
 REPO = "AuraRPG"
-HEADERS = {"Authorization": f"token {GITHUB_TOKEN}"}
+HEADERS = {"Authorization": f"token {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
 
-# List of files to update (relative paths in repo)
+# ---------------- Files to Update ----------------
 FILES_TO_UPDATE = [
-    "main.py",
+    "scripts/main.py",
+    "scripts/check_update.py",
     "data/config.py",
     "game/__init__.py",
     "game/commands.py",
-    # Add more files here as needed
+    # Add more files as needed
 ]
 
 # ---------------- Download ----------------
@@ -54,7 +60,6 @@ def download_file(filepath):
 def restart_game():
     """Restart the game in a new window and exit the current process."""
     print("Restarting game to apply updates...")
-
     python_exe = sys.executable
     script_path = os.path.abspath(sys.argv[0])
 

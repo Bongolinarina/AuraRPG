@@ -2,16 +2,16 @@
 import os
 import sys
 
+# ----------------- Add project root to path -----------------
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 # ----------------- Ensure CMD -----------------
-
-import os
-import sys
-
 def ensure_cmd():
     shell = os.environ.get("COMSPEC", "")
-    # Detect if we're not running in classic CMD
     if "cmd.exe" not in shell.lower():
-        bat_path = os.path.abspath("run_game.bat")
+        bat_path = os.path.join(project_root, "run_game.bat")
         print("[DEBUG] Launching game in a real CMD window...")
         if os.path.exists(bat_path):
             os.system(f'start cmd /k "{bat_path}"')
@@ -19,8 +19,7 @@ def ensure_cmd():
             print(f"[DEBUG] ERROR: run_game.bat not found at {bat_path}")
         sys.exit()
 
-
-ensure_cmd()  # Call this first
+ensure_cmd()  # Must run first
 
 # ----------------- Update Check -----------------
 from check_update import check_for_update

@@ -1,5 +1,11 @@
 import requests, zipfile, io, os, shutil, sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from data.config import version as current_version
+
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+    print(f"[DEBUG] Added project root to sys.path: {project_root}")
 
 GITHUB_USER = "Bongolinarina"
 GITHUB_REPO = "AuraRPG"
