@@ -13,3 +13,6 @@ open_dir.bat
 
 # Ignore the version updater
 new_version.bat
+
+# Ignore the update plans
+plans
