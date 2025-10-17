@@ -1,8 +1,5 @@
 # commands.py - auto-created starter file
 import os
-import sys
-import psutil
-import subprocess
 
 def get_value(data):
     try:
