@@ -2,10 +2,11 @@
 chcp 65001 >nul
 title AuraRPG Launcher
 
-:: Path to main.py
+:: Absolute path to main.py
 set "MAIN_PY=D:\Python Games\Aura RPG\scripts\main.py"
 
-echo Launching main.py...
-start "" cmd /K python "%MAIN_PY%"
+:: Launch main.py in the current CMD window
+python "%MAIN_PY%"
 
+:: Exit CMD after main.py finishes
 exit

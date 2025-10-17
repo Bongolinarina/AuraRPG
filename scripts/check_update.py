@@ -41,26 +41,19 @@ def download_latest_zip():
 
 
 def restart_game():
-    """Restart the game in a new CMD window and close this Python process."""
+    """Restart the game in the same CMD window after update."""
     print("Restarting game to apply updates...")
 
-    # Absolute path to run_game.bat
+    # Absolute path to main.py
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    bat_path = os.path.join(project_root, "run_game.bat")
+    main_path = os.path.join(project_root, "scripts", "main.py")
 
-    if os.path.exists(bat_path):
-        print(f"[DEBUG] Launching: {bat_path}")
-
-        # Launch run_game.bat in a new CMD window and **immediately close current process**
-        # /C closes the new CMD automatically after it finishes
-        subprocess.Popen(f'start "" cmd /C "{bat_path}"', shell=True)
-
+    if os.path.exists(main_path):
+        print(f"[DEBUG] Relaunching main.py: {main_path}")
+        os.execv(sys.executable, [sys.executable, main_path])
     else:
-        print(f"[ERROR] run_game.bat not found at {bat_path}")
-
-    # Exit immediately so the current prompt window closes
-    sys.exit()
-
+        print("[ERROR] main.py not found!")
+        sys.exit()
 # ---------------- Update ----------------
 def update_game():
     """Download all files from GitHub and apply updates."""
