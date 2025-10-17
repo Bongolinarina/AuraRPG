@@ -1,8 +1,8 @@
 plrName = ""
-plrLvl = 1
+plrLvl = 0
 plrXP = 0
 plrCoins = 0
 plrHP = 100
 plrMaxHP = 100
 plrRebirth = 0
-inventory = {"Wood":0, "Stone":0}
+inventory = {'Wood': 0, 'Stone': 0}

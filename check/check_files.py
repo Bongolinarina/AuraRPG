@@ -1,5 +1,5 @@
 import os
-
+from data.config import *
 def ensure_file(path, expected_content):
     if not os.path.exists(path):
         with open(path, "w") as f:
@@ -20,16 +20,49 @@ def ensure_file(path, expected_content):
 def check_player_data():
     os.makedirs("data", exist_ok=True)
     player_file = "data/player_data.txt"
+
     required_vars = {
-        "plrName": '""',
-        "plrLvl": 1,
-        "plrXP": 0,
-        "plrCoins": 0,
-        "plrHP": 100,
-        "plrMaxHP": 100,
-        "plrRebirth": 0,
-        "inventory": '{"Wood":0, "Stone":0}'
+        "plrName": NAME,
+        "plrLvl": LVL,
+        "plrXP": XP,
+        "plrCoins": COINS,
+        "plrHP": HP,
+        "plrMaxHP": MAXHP,
+        "plrRebirth": REBIRTH,
+        "inventory": INV
     }
+
+    # Create the file if it doesn't exist
+    if not os.path.exists(player_file):
+        with open(player_file, "w") as f:
+            for key, val in required_vars.items():
+                f.write(f"{key}={val}\n")
+        print("✅ Created new player_data.txt with default values.")
+        return
+
+    # Check for missing keys and fix them
+    with open(player_file, "r") as f:
+        lines = f.readlines()
+
+    data = {}
+    for line in lines:
+        if "=" in line:
+            key, val = line.strip().split("=", 1)
+            data[key] = val
+
+    missing = False
+    for key, val in required_vars.items():
+        if key not in data:
+            data[key] = val
+            missing = True
+
+    if missing:
+        with open(player_file, "w") as f:
+            for key, val in data.items():
+                f.write(f"{key}={val}\n")
+        print("⚙️ Fixed missing values in player_data.txt")
+    else:
+        print("✅ player_data.txt is up to date.")
 
     existing_lines = []
     if os.path.exists(player_file):

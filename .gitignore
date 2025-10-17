@@ -10,3 +10,6 @@ push_update.bat
 
 # Ignore directory opener
 open_dir.bat
+
+# Ignore the version updater
+new_version.bat
