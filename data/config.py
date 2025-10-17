@@ -1,10 +1,10 @@
+# config.py
 version = "BETA"
-GITHUB_TOKEN = "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"
 NAME = ""
 HP = 100
 MAXHP = 100
 REBIRTH = 0
 XP = 0
 COINS = 0
-LVL = 0
+LVL = 1
 INV = {"Wood":0, "Stone":0}

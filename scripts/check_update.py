@@ -1,108 +1,112 @@
-# scripts/check_update.py
+# check_update.py
 import os
 import sys
 import requests
-import base64
-import importlib
-import subprocess
-
-# ---------------- Project Root ----------------
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+import zipfile
+import io
+import shutil
 
 # ---------------- Config ----------------
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from data import config
-importlib.reload(config)  # reload to get latest version
-CURRENT_VERSION = config.version
-GITHUB_TOKEN = getattr(config, "GITHUB_TOKEN", "")
 
+CURRENT_VERSION = config.version
+
+# ---------------- GitHub Repo ----------------
 OWNER = "Bongolinarina"
 REPO = "AuraRPG"
-HEADERS = {"Authorization": f"token {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
 
-# ---------------- Files to Update ----------------
+# ---------------- Files to update ----------------
 FILES_TO_UPDATE = [
-    "scripts/main.py",
-    "scripts/check_update.py",
+    "main.py",
     "data/config.py",
     "game/__init__.py",
     "game/commands.py",
-    # Add more files as needed
+    # Add more files here as needed
 ]
 
-# ---------------- Download ----------------
-def download_file(filepath):
-    """Download a single file from GitHub and overwrite local copy."""
-    url = f"https://api.github.com/repos/{OWNER}/{REPO}/contents/{filepath}"
-    response = requests.get(url, headers=HEADERS)
-    if response.status_code != 200:
-        print(f"Failed to download {filepath}: {response.status_code}")
-        return False
+# ---------------- Helper Functions ----------------
+def download_latest_zip():
+    """Download latest main branch as zip from GitHub."""
+    url = f"https://github.com/{OWNER}/{REPO}/archive/refs/heads/main.zip"
+    try:
+        print("Downloading latest version from GitHub...")
+        r = requests.get(url, stream=True)
+        r.raise_for_status()
+        return zipfile.ZipFile(io.BytesIO(r.content))
+    except Exception as e:
+        print(f"Download failed: {e}")
+        return None
 
-    content = response.json().get("content")
-    if content is None:
-        print(f"No content found for {filepath}")
-        return False
-
-    decoded = base64.b64decode(content)
-
-    folder = os.path.dirname(filepath)
-    if folder:
-        os.makedirs(folder, exist_ok=True)
-
-    with open(filepath, "wb") as f:
-        f.write(decoded)
-    print(f"Updated {filepath}")
-    return True
-
-# ---------------- Restart Game ----------------
 def restart_game():
-    """Restart the game in a new window and exit the current process."""
+    """Restart the game in a new CMD window (Windows only)."""
     print("Restarting game to apply updates...")
     python_exe = sys.executable
     script_path = os.path.abspath(sys.argv[0])
-
-    if os.name == "nt":  # Windows
-        subprocess.Popen(f'start "" "{python_exe}" "{script_path}"', shell=True)
-    else:
-        subprocess.Popen([python_exe, script_path])
-
-    sys.exit()  # Exit current process
+    if os.name == "nt":
+        os.system(f'start cmd /k "{python_exe}" "{script_path}"')
+    sys.exit()  # Stop current process
 
 # ---------------- Update ----------------
 def update_game():
-    """Download all tracked files from GitHub and restart the game."""
-    print("Updating game files from GitHub...")
-    success = True
+    """Download all files from GitHub and apply updates."""
+    z = download_latest_zip()
+    if not z:
+        return
 
-    for file in FILES_TO_UPDATE:
-        if not download_file(file):
-            success = False
+    print("Extracting files...")
+    temp_dir = "temp_update"
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir)
+    os.makedirs(temp_dir, exist_ok=True)
 
-    if success:
-        print("All files updated successfully!")
-        restart_game()
-    else:
-        print("Some files failed to update. Check your token/repo permissions.")
+    z.extractall(temp_dir)
+    extracted_folder = os.path.join(temp_dir, os.listdir(temp_dir)[0])
 
-# ---------------- Check for Update ----------------
+    # Backup player data
+    player_data = "data/player_data.txt"
+    backup_data = None
+    if os.path.exists(player_data):
+        with open(player_data, "r") as f:
+            backup_data = f.read()
+
+    # Copy files over
+    for root, dirs, files in os.walk(extracted_folder):
+        rel_path = os.path.relpath(root, extracted_folder)
+        target_dir = os.path.join(".", rel_path)
+        os.makedirs(target_dir, exist_ok=True)
+        for file in files:
+            dst_file = os.path.join(target_dir, file)
+            src_file = os.path.join(root, file)
+            if dst_file != player_data:
+                shutil.copy2(src_file, dst_file)
+
+    # Restore player data
+    if backup_data:
+        with open(player_data, "w") as f:
+            f.write(backup_data)
+
+    shutil.rmtree(temp_dir)
+    print("Update complete!")
+    restart_game()
+
+# ---------------- Check for updates ----------------
 def get_latest_version():
-    """Return the latest tag from GitHub repo."""
+    """Get latest tag from GitHub."""
     url = f"https://api.github.com/repos/{OWNER}/{REPO}/tags"
     try:
-        response = requests.get(url, headers=HEADERS, timeout=5)
-        response.raise_for_status()
-        tags = response.json()
+        r = requests.get(url, timeout=5)
+        r.raise_for_status()
+        tags = r.json()
         if not tags:
             return None
-        return tags[0]["name"]  # latest tag
+        return tags[0]["name"]
     except Exception as e:
         print(f"[Update check failed] {e}")
         return None
 
 def check_for_update():
-    """Check GitHub for a newer version and optionally update."""
+    """Check if a new version is available and prompt user."""
     latest = get_latest_version()
     if latest is None:
         print("No tags found on GitHub.")

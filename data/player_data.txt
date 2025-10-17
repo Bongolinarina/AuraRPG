@@ -1,5 +1,5 @@
 plrName = ""
-plrLvl = 0
+plrLvl = 1
 plrXP = 0
 plrCoins = 0
 plrHP = 100
