@@ -13,6 +13,9 @@ if not exist "%MAIN_PY%" (
     exit /b
 )
 
+:: Wait 1 second to ensure updates have finished
+timeout /t 1 /nobreak >nul
+
 echo [DEBUG] Launching CMD to run Python script...
 
 :: Use start with /D to set working directory and /K to keep window open
