@@ -1,4 +1,4 @@
-version = "BETA"
+version = "$env:VERSION"
 GITHUB_TOKEN = "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"
 NAME = ""
 HP = 100
