@@ -41,17 +41,19 @@ def download_latest_zip():
 
 
 def restart_game():
-    """Restart the game in a new CMD window after update."""
+    """Restart the game in a new CMD window and close the current one."""
     print("Restarting game to apply updates...")
 
-    # Path to run_game.bat (absolute)
+    # Absolute path to run_game.bat
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     bat_path = os.path.join(project_root, "run_game.bat")
 
     if os.path.exists(bat_path):
         print(f"[DEBUG] Launching: {bat_path}")
-        # Use 'start' in cmd, /wait ensures the update has finished
-        subprocess.Popen(f'start "" "{bat_path}"', shell=True)
+
+        # Launch the batch in a new CMD window and close the current one
+        # /C runs the command then closes this window automatically
+        subprocess.Popen(f'start "" cmd /C "{bat_path}"', shell=True)
     else:
         print(f"[ERROR] run_game.bat not found at {bat_path}")
 
