@@ -74,7 +74,7 @@ def ask_for_update(current_version, latest_version):
     print("╚" + "═" * 50 + "╝" + RESET)
 
     while True:
-        choice = input("\nWould you like to update? [Y/N]: ").strip().lower()
+        choice = input().strip().lower()
         if choice == "y":
             print("Starting update...")
             return True

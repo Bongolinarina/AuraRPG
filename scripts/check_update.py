@@ -10,7 +10,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from game.commands import *
 
 # ---------------- Config ----------------
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from data import config
 import importlib
 importlib.reload(config)
@@ -127,20 +126,6 @@ def check_for_update():
 
     print(f"[DEBUG] Latest GitHub version: {latest}")
     print(f"[DEBUG] Your current version: {CURRENT_VERSION}")
-
-    if latest != CURRENT_VERSION:
-        choice = input(f"A new version is available ({latest}). Update? [y/N]: ").lower()
-        if choice == "y":
-            success = apply_update()
-            if success:
-                restart_game_in_new_window()
-            else:
-                print("[ERROR] Update failed. Continuing with current version.")
-        else:
-            print("Skipping update.")
-    else:
-        print("You are running the latest version.")
-
 # ---------------- Run if called directly ----------------
 if __name__ == "__main__":
     check_for_update()
