@@ -1,5 +1,5 @@
 # config.py
-version = "BET2A"
+version = "BETA"
 NAME = ""
 HP = 100
 MAXHP = 100
