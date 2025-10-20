@@ -56,3 +56,31 @@ def check_files():
             f.write('plrRebirth = 0\n')
             f.write('inventory = {"Wood":0, "Stone":0}\n')
         print("player_data.txt created with default values.")
+
+def ask_for_update(current_version, latest_version):
+    YELLOW = "\033[93m"
+    CYAN = "\033[96m"
+    RESET = "\033[0m"
+
+    print(YELLOW + "╔" + "═" * 50 + "╗")
+    print("║" + " " * 50 + "║")
+    print(f"║{CYAN}           ⚡ UPDATE AVAILABLE ⚡{RESET}".center(52) + "║")
+    print("║" + " " * 50 + "║")
+    print(f"║   Current Version: {current_version:<15} Latest: {latest_version:<8}║")
+    print("║" + " " * 50 + "║")
+    print(f"║   Press [Y] to update now                    ║")
+    print(f"║   Press [N] to skip and continue             ║")
+    print("║" + " " * 50 + "║")
+    print("╚" + "═" * 50 + "╝" + RESET)
+
+    while True:
+        choice = input("\nWould you like to update? [Y/N]: ").strip().lower()
+        if choice == "y":
+            print("Starting update...")
+            return True
+        elif choice == "n":
+            print("Skipping update...")
+            return False
+        else:
+            print("Invalid choice. Please enter Y or N.")
+
